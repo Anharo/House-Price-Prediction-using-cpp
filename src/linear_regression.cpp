@@ -2,24 +2,30 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <vector>
+
+using namespace std;
+
 // Constructor
 LinearRegression::LinearRegression(int n_features) {
     theta.resize(n_features + 1, 0.0); // +1 for bias
 }
 
 // Prediction
-double LinearRegression::predict(const std::vector<double>& x) {
+double LinearRegression::predict(const vector<double>& x) {
     double result = theta[0]; // bias
+
     for (int i = 0; i < x.size(); i++) {
         result += theta[i + 1] * x[i];
     }
+
     return result;
 }
 
 // Cost function (MSE)
 double LinearRegression::computeCost(
-    const std::vector<std::vector<double>>& X,
-    const std::vector<double>& y) {
+    const vector<vector<double>>& X,
+    const vector<double>& y) {
 
     int m = X.size();
     double cost = 0.0;
@@ -34,8 +40,8 @@ double LinearRegression::computeCost(
 
 // Gradient Descent
 void LinearRegression::gradientDescent(
-    const std::vector<std::vector<double>>& X,
-    const std::vector<double>& y,
+    const vector<vector<double>>& X,
+    const vector<double>& y,
     double alpha,
     int epochs) {
 
@@ -43,12 +49,15 @@ void LinearRegression::gradientDescent(
     int n = X[0].size();
 
     for (int epoch = 1; epoch <= epochs; epoch++) {
-        std::vector<double> gradients(n + 1, 0.0);
+
+        vector<double> gradients(n + 1, 0.0);
 
         for (int i = 0; i < m; i++) {
+
             double error = predict(X[i]) - y[i];
 
             gradients[0] += error;
+
             for (int j = 0; j < n; j++) {
                 gradients[j + 1] += error * X[i][j];
             }
@@ -59,22 +68,31 @@ void LinearRegression::gradientDescent(
         }
 
         if (epoch % 500 == 0) {
-            std::cout << "Epoch " << epoch
-                      << " | Cost: " << computeCost(X, y)
-                      << "\n";
+            cout << "Epoch " << epoch
+                 << " | Cost: " << computeCost(X, y)
+                 << "\n";
         }
     }
 }
-void LinearRegression::saveModel(const std::string& filename) const {
-    std::ofstream file(filename);
-    for (double t : theta)
+
+// Save model
+void LinearRegression::saveModel(const string& filename) const {
+    ofstream file(filename);
+
+    for (double t : theta) {
         file << t << " ";
+    }
+
     file.close();
 }
 
-void LinearRegression::loadModel(const std::string& filename) {
-    std::ifstream file(filename);
-    for (double& t : theta)
+// Load model
+void LinearRegression::loadModel(const string& filename) {
+    ifstream file(filename);
+
+    for (double& t : theta) {
         file >> t;
+    }
+
     file.close();
 }

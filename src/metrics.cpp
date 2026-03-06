@@ -1,9 +1,9 @@
 #include "metrics.h"
 #include <cmath>
+#include <vector>
+using namespace std;
 
-double RMSE(const std::vector<double>& y_true,
-            const std::vector<double>& y_pred) {
-
+double RMSE(const vector<double>& y_true,const vector<double>& y_pred) {
     double sum = 0.0;
     int m = y_true.size();
 
@@ -11,6 +11,5 @@ double RMSE(const std::vector<double>& y_true,
         double diff = y_true[i] - y_pred[i];
         sum += diff * diff;
     }
-
-    return std::sqrt(sum / m);
+    return sqrt(sum / m);
 }
