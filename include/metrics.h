@@ -5,5 +5,8 @@
 
 double RMSE(const std::vector<double>& y_true,
             const std::vector<double>& y_pred);
-
+double MAE(const std::vector<double>& y_true,
+           const std::vector<double>& y_pred);
+double R2Score(const std::vector<double>& y_true,
+               const std::vector<double>& y_pred);
 #endif

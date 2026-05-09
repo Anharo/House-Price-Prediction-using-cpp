@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "dataset.h"
 #include "linear_regression.h"
+#include "metrics.h"         
 
 using namespace std;
 
@@ -10,25 +11,45 @@ int main() {
 
     Dataset data;
 
-    if (!data.loadCSV("data/house_prices.csv")) {
+    if (!data.loadCSV("../data/house_prices.csv")) {
         return 1;
     }
 
     data.normalize();
 
-    int n_features = data.X[0].size();
+    // ===== TRAIN / TEST SPLIT ===== 
+    auto [train, test] = data.trainTestSplit(0.2);  
 
-    // ===== TRAIN MODEL =====
+    int n_features = train.X[0].size();
+
+    // ===== TRAIN MODEL on train set =====
     LinearRegression model(n_features);
-    model.gradientDescent(data.X, data.y, 0.01, 5000);
+    model.gradientDescent(train.X, train.y, 0.01, 5000);
+    cout << "\nTraining completed.\n";
 
-    cout << "Training completed.\n";
+    // ===== EVALUATE on test set =====
+    vector<double> y_pred;
+    for (const auto& x : test.X) {
+        y_pred.push_back(model.predict(x));
+    }
 
-    // ===== SAVE MODEL =====
+    // Denormalize for real-world metrics
+    vector<double> y_pred_real, y_true_real;
+    for (int i = 0; i < test.y.size(); i++) {
+        y_pred_real.push_back(data.denormalizeY(y_pred[i]));
+        y_true_real.push_back(data.denormalizeY(test.y[i]));
+    }
+
+    cout << "\n===== Model Evaluation (Test Set) =====\n";
+    cout << "RMSE   : " << RMSE(y_true_real, y_pred_real)    << " INR\n";
+    cout << "MAE    : " << MAE(y_true_real, y_pred_real)     << " INR\n";
+    cout << "R²     : " << R2Score(y_true_real, y_pred_real) << "\n";
+    cout << "========================================\n";
+
+    // ===== SAVE / LOAD MODEL =====
     model.saveModel("model.txt");
-    cout << "Model saved to model.txt\n";
+    cout << "\nModel saved to model.txt\n";
 
-    // ===== LOAD MODEL =====
     LinearRegression loadedModel(n_features);
     loadedModel.loadModel("model.txt");
     cout << "Model loaded successfully.\n";
@@ -39,7 +60,6 @@ int main() {
         vector<double> house(n_features);
 
         cout << "\nEnter house details:\n";
-
         cout << "Area (sqft, 200-10000): ";
         cin >> house[0];
         house[0] = clamp(house[0], 200.0, 10000.0);
@@ -60,10 +80,8 @@ int main() {
         cin >> house[4];
         house[4] = clamp(house[4], 0.0, 100.0);
 
-        // Normalize input
         vector<double> normalizedHouse = data.normalizeInput(house);
 
-        // Predict
         double pred_norm = loadedModel.predict(normalizedHouse);
         double price = data.denormalizeY(pred_norm);
 
@@ -72,13 +90,9 @@ int main() {
         char choice;
         cout << "\nPredict another house? (y/n): ";
         cin >> choice;
-
-        if (choice != 'y' && choice != 'Y') {
-            break;
-        }
+        if (choice != 'y' && choice != 'Y') break;
     }
 
     cout << "\nExiting program.\n";
-
     return 0;
 }
